@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func SetupLogging(logFile, logLevel, crashLogFile, alarmSockPath, alarmTag string) {
+func SetupLogging(logFile, logLevel, crashLogFile string) {
 	level := log.DEBUG
 	switch logLevel {
 	case "info":

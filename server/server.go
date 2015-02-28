@@ -2,6 +2,7 @@ package server
 
 import (
 	conf "github.com/nicholaskh/jsconf"
+	"net"
 	"time"
 )
 
@@ -13,6 +14,8 @@ type Server struct {
 	StartedAt  time.Time
 	pid        int
 	hostname   string
+	fd         net.Listener
+	servAddr   string
 }
 
 func NewServer(name string) (this *Server) {

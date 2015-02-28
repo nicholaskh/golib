@@ -17,5 +17,7 @@ func (this *Server) LoadConfig(fn string) *Server {
 		panic(err)
 	}
 
+	this.servAddr = this.Conf.String("serv_addr", ":2222")
+
 	return this
 }

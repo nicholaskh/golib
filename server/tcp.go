@@ -1,35 +1,45 @@
 package server
 
 import (
-	"fmt"
 	"net"
+	"time"
+
+	log "github.com/nicholaskh/log4go"
 )
 
 type Handler interface {
-	run(conn net.Conn)
+	Run(conn net.Conn)
 }
 
-func LaunchTcpServ(listenAddr string, handler Handler) {
-	ln, err := net.Listen("tcp", listenAddr)
+func (this *Server) LaunchTcpServ(handler Handler) (err error) {
+	ln, err := net.Listen("tcp", this.servAddr)
 
-	// TODO log
 	if err != nil {
-
+		log.Error("Launch tcp server error: %s", err.Error())
 	}
 
-	defer ln.Close()
+	this.fd = ln
 
-	// TODO log
-	fmt.Println("Listening on " + listenAddr)
+	log.Info("Listening on %s", this.servAddr)
 
 	for {
-		conn, err := ln.Accept()
-
-		// TODO log
+		conn, err := this.fd.Accept()
 		if err != nil {
-
+			log.Error("Accept error: %s", err.Error())
 		}
 
-		handler.run(conn)
+		handler.Run(conn)
+	}
+}
+
+func (this *Server) StopTcpServ() {
+	this.fd.Close()
+	log.Info("HTTP server stopped")
+}
+
+func (this *Server) PingClient(conn net.Conn, interval time.Duration) {
+	select {
+	case <-time.Tick(interval):
+		ping(conn)
 	}
 }
