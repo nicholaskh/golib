@@ -46,7 +46,7 @@ func (this *Server) PingClient(conn net.Conn, interval time.Duration) {
 		select {
 		case <-time.Tick(interval):
 			log.Debug("Ping client %s", conn.RemoteAddr())
-			_, err := conn.Write([]byte{65})
+			_, err := conn.Write([]byte{0})
 			if err != nil {
 				conn.Close()
 				return
