@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/funkygao/golib/gofmt"
-	log "github.com/funkygao/log4go"
+	"github.com/nicholaskh/golib/gofmt"
+	log "github.com/nicholaskh/log4go"
 	"runtime"
 	"syscall"
 	"time"

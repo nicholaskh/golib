@@ -1,7 +1,7 @@
 package server
 
 import (
-	conf "github.com/funkygao/jsconf"
+	conf "github.com/nicholaskh/jsconf"
 	"time"
 )
 

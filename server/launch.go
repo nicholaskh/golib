@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/funkygao/golib/signal"
+	"github.com/nicholaskh/golib/signal"
 	"os"
 	"runtime"
 	"syscall"

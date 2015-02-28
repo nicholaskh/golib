@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	log "github.com/funkygao/log4go"
+	log "github.com/nicholaskh/log4go"
 	"os"
 	"syscall"
 	"time"
@@ -26,8 +26,8 @@ func SetupLogging(logFile, logLevel, crashLogFile, alarmSockPath, alarmTag strin
 	case "trace":
 		level = log.TRACE
 
-	case "alarm":
-		level = log.ALARM
+		//case "alarm":
+		//	level = log.ALARM
 	}
 
 	for _, filter := range log.Global {
@@ -50,13 +50,13 @@ func SetupLogging(logFile, logLevel, crashLogFile, alarmSockPath, alarmTag strin
 		filer.SetRotateDaily(true)
 		log.AddFilter("file", level, filer)
 
-		if alarmTag != "" && alarmSockPath != "" {
-			if alarmer, err := log.NewSyslogNgWriter(alarmSockPath, alarmTag); err != nil {
-				log.Error("syslogng writer: %s", err.Error())
-			} else {
-				log.AddFilter("alarm", log.ALARM, alarmer)
-			}
-		}
+		//if alarmTag != "" && alarmSockPath != "" {
+		//	if alarmer, err := log.NewSyslogNgWriter(alarmSockPath, alarmTag); err != nil {
+		//		log.Error("syslogng writer: %s", err.Error())
+		//	} else {
+		//		log.AddFilter("alarm", log.ALARM, alarmer)
+		//	}
+		//}
 	}
 
 	if crashLogFile != "" {
