@@ -11,8 +11,8 @@ type Handler interface {
 	Run(conn net.Conn)
 }
 
-func (this *Server) LaunchTcpServ(handler Handler) (err error) {
-	ln, err := net.Listen("tcp", this.servAddr)
+func (this *Server) LaunchTcpServ(listenAddr string, handler Handler, pingInterval time.Duration) (err error) {
+	ln, err := net.Listen("tcp", listenAddr)
 
 	if err != nil {
 		log.Error("Launch tcp server error: %s", err.Error())
@@ -20,7 +20,7 @@ func (this *Server) LaunchTcpServ(handler Handler) (err error) {
 
 	this.fd = ln
 
-	log.Info("Listening on %s", this.servAddr)
+	log.Info("Listening on %s", listenAddr)
 
 	for {
 		conn, err := this.fd.Accept()
@@ -29,6 +29,9 @@ func (this *Server) LaunchTcpServ(handler Handler) (err error) {
 		}
 
 		handler.Run(conn)
+		if pingInterval.Nanoseconds() > int64(0) {
+			go this.PingClient(conn, pingInterval)
+		}
 	}
 }
 
@@ -37,9 +40,17 @@ func (this *Server) StopTcpServ() {
 	log.Info("HTTP server stopped")
 }
 
+// TODO retry
 func (this *Server) PingClient(conn net.Conn, interval time.Duration) {
-	select {
-	case <-time.Tick(interval):
-		ping(conn)
+	for {
+		select {
+		case <-time.Tick(interval):
+			log.Debug("Ping client %s", conn.RemoteAddr())
+			_, err := conn.Write([]byte{65})
+			if err != nil {
+				conn.Close()
+				return
+			}
+		}
 	}
 }

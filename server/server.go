@@ -15,7 +15,6 @@ type Server struct {
 	pid        int
 	hostname   string
 	fd         net.Listener
-	servAddr   string
 }
 
 func NewServer(name string) (this *Server) {
