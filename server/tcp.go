@@ -8,10 +8,15 @@ import (
 )
 
 type Handler interface {
-	Run(conn net.Conn)
+	Run(*Client)
 }
 
-func (this *Server) LaunchTcpServ(listenAddr string, handler Handler, pingInterval time.Duration) (err error) {
+type Client struct {
+	net.Conn
+	LastTime time.Time
+}
+
+func (this *Server) LaunchTcpServ(listenAddr string, handler Handler, servTimeout time.Duration) (err error) {
 	ln, err := net.Listen("tcp", listenAddr)
 
 	if err != nil {
@@ -28,9 +33,11 @@ func (this *Server) LaunchTcpServ(listenAddr string, handler Handler, pingInterv
 			log.Error("Accept error: %s", err.Error())
 		}
 
-		handler.Run(conn)
-		if pingInterval.Nanoseconds() > int64(0) {
-			go this.PingClient(conn, pingInterval)
+		client := &Client{Conn: conn, LastTime: time.Now()}
+
+		go handler.Run(client)
+		if servTimeout.Nanoseconds() > int64(0) {
+			go this.checkTimeout(client, servTimeout)
 		}
 	}
 }
@@ -41,15 +48,13 @@ func (this *Server) StopTcpServ() {
 }
 
 // TODO retry
-func (this *Server) PingClient(conn net.Conn, interval time.Duration) {
+func (this *Server) checkTimeout(client *Client, timeout time.Duration) {
 	for {
 		select {
-		case <-time.Tick(interval):
-			log.Debug("Ping client %s", conn.RemoteAddr())
-			_, err := conn.Write([]byte{0})
-			if err != nil {
-				conn.Close()
-				return
+		case <-time.Tick(timeout):
+			log.Debug("Check client timeout: %s", client.Conn.RemoteAddr())
+			if time.Now().After(client.LastTime.Add(timeout)) {
+				client.Conn.Close()
 			}
 		}
 	}

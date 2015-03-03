@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/funkygao/golib/slab"
+	"github.com/nicholaskh/golib/slab"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/funkygao/golib/pipestream"
+	"github.com/nicholaskh/golib/pipestream"
 	"log"
 	"os"
 	"strings"

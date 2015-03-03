@@ -1,7 +1,7 @@
 package uuid
 
 import (
-	"github.com/funkygao/assert"
+	"github.com/nicholaskh/assert"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ func TestUUID(t *testing.T) {
 }
 
 func BenchmarkUUID(b *testing.B) {
-    for i:=0; i<b.N; i++ {
-        UUID()
-    }
+	for i := 0; i < b.N; i++ {
+		UUID()
+	}
 }

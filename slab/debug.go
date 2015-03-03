@@ -1,7 +1,7 @@
 package slab
 
 import (
-	"github.com/funkygao/pretty"
+	"github.com/nicholaskh/pretty"
 	"log"
 )
 

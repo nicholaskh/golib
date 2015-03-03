@@ -3,7 +3,7 @@ package stats
 import (
 	"encoding/gob"
 	"errors"
-	h "github.com/funkygao/hyperloglog"
+	h "github.com/nicholaskh/hyperloglog"
 	"hash/fnv"
 	"math"
 	"os"

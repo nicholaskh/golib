@@ -1,7 +1,7 @@
 package profile_test
 
 import (
-	"github.com/funkygao/golib/profile"
+	"github.com/nicholaskh/golib/profile"
 )
 
 func ExampleStart() {

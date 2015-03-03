@@ -1,8 +1,8 @@
 package cache
 
 import (
-    "github.com/funkygao/assert"
 	"fmt"
+	"github.com/nicholaskh/assert"
 	"math/rand"
 	"testing"
 )
@@ -60,14 +60,14 @@ func TestDel(t *testing.T) {
 }
 
 func TestInc(t *testing.T) {
-    lru := NewLruCache(10)
-    counter := lru.Inc("foo")
-    assert.Equal(t, 1, counter)
-    counter = lru.Inc("foo")
-    assert.Equal(t, 2, counter)
-    lru.Del("foo")
-    counter = lru.Inc("foo")
-    assert.Equal(t, 1, counter)
+	lru := NewLruCache(10)
+	counter := lru.Inc("foo")
+	assert.Equal(t, 1, counter)
+	counter = lru.Inc("foo")
+	assert.Equal(t, 2, counter)
+	lru.Del("foo")
+	counter = lru.Inc("foo")
+	assert.Equal(t, 1, counter)
 }
 
 func BenchmarkCreateKey(b *testing.B) {

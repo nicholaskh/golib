@@ -1,8 +1,8 @@
 package main
 
 import (
-    ob "github.com/funkygao/golib/observer"
 	"fmt"
+	ob "github.com/nicholaskh/golib/observer"
 	"time"
 )
 

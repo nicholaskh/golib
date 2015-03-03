@@ -2,7 +2,7 @@ package pqueue
 
 import (
 	"container/heap"
-	"github.com/funkygao/assert"
+	"github.com/nicholaskh/assert"
 	"testing"
 )
 
@@ -15,10 +15,10 @@ func TestPriorityQueue(t *testing.T) {
 
 	assert.Equal(t, 3+1+8, pq.PrioritySum())
 
-    item := pq.Peek()
-    assert.Equal(t, "hello8", item.(*Item).Value.(string))
-    item = pq.Peek()
-    assert.Equal(t, "hello8", item.(*Item).Value.(string))
+	item := pq.Peek()
+	assert.Equal(t, "hello8", item.(*Item).Value.(string))
+	item = pq.Peek()
+	assert.Equal(t, "hello8", item.(*Item).Value.(string))
 
 	item = heap.Pop(pq)
 	assert.Equal(t, "hello8", item.(*Item).Value.(string))

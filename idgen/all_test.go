@@ -1,7 +1,7 @@
 package idgen
 
 import (
-	"github.com/funkygao/assert"
+	"github.com/nicholaskh/assert"
 	"testing"
 )
 

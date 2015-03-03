@@ -2,7 +2,7 @@ package color
 
 import (
 	"bytes"
-	"github.com/funkygao/golib/recycler"
+	"github.com/nicholaskh/golib/recycler"
 )
 
 const (

@@ -1,7 +1,7 @@
 package null
 
 import (
-	"github.com/funkygao/assert"
+	"github.com/nicholaskh/assert"
 	"testing"
 	"unsafe"
 )

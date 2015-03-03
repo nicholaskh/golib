@@ -2,8 +2,8 @@ package pool
 
 import (
 	"fmt"
-	"github.com/funkygao/golib/sync2"
-	log "github.com/funkygao/log4go"
+	"github.com/nicholaskh/golib/sync2"
+	log "github.com/nicholaskh/log4go"
 	"time"
 )
 

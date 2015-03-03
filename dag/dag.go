@@ -3,7 +3,7 @@ package dag
 
 import (
 	"fmt"
-	"github.com/funkygao/golib/str"
+	"github.com/nicholaskh/golib/str"
 	"os"
 )
 

@@ -1,7 +1,7 @@
 package dlog
 
 import (
-	"github.com/funkygao/golib/syslogng"
+	"github.com/nicholaskh/golib/syslogng"
 	"time"
 )
 

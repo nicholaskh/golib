@@ -6,7 +6,7 @@ package pool
 
 import (
 	"errors"
-	"github.com/funkygao/golib/sync2"
+	"github.com/nicholaskh/golib/sync2"
 	"testing"
 	"time"
 )
