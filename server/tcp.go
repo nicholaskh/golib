@@ -54,6 +54,7 @@ func (this *Server) checkTimeout(client *Client, timeout time.Duration) {
 		case <-time.Tick(timeout):
 			log.Debug("Check client timeout: %s", client.Conn.RemoteAddr())
 			if time.Now().After(client.LastTime.Add(timeout)) {
+				log.Warn("Client connection timeout: %s", client.Conn.RemoteAddr())
 				client.Conn.Close()
 			}
 		}
