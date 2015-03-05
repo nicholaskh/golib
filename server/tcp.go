@@ -33,6 +33,7 @@ func (this *Server) LaunchTcpServ(listenAddr string, handler Handler, servTimeou
 			log.Error("Accept error: %s", err.Error())
 		}
 
+		// TODO use a thread pool
 		client := &Client{Conn: conn, LastTime: time.Now()}
 
 		go handler.Run(client)
@@ -47,7 +48,6 @@ func (this *Server) StopTcpServ() {
 	log.Info("HTTP server stopped")
 }
 
-// TODO retry
 func (this *Server) checkTimeout(client *Client, timeout time.Duration) {
 	for {
 		select {
@@ -56,6 +56,7 @@ func (this *Server) checkTimeout(client *Client, timeout time.Duration) {
 			if time.Now().After(client.LastTime.Add(timeout)) {
 				log.Warn("Client connection timeout: %s", client.Conn.RemoteAddr())
 				client.Conn.Close()
+				return
 			}
 		}
 	}
