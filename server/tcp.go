@@ -17,7 +17,7 @@ type TcpServer struct {
 	sessTimeout         time.Duration
 	handler             Handler
 	acceptLock          *sync2.Semaphore
-	initialGoRoutineNum int32
+	initialGoRoutineNum int
 }
 
 type Client struct {
@@ -34,7 +34,7 @@ func NewTcpServer(name string) (this *TcpServer) {
 	return
 }
 
-func (this *TcpServer) LaunchTcpServ(listenAddr string, handler Handler, sessTimeout time.Duration, initialGoRoutineNum int32) (err error) {
+func (this *TcpServer) LaunchTcpServ(listenAddr string, handler Handler, sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
 	this.sessTimeout = sessTimeout
 	this.handler = handler
 	this.acceptLock = sync2.NewSemaphore(1, 0)
