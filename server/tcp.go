@@ -34,7 +34,7 @@ func NewTcpServer(name string) (this *TcpServer) {
 	return
 }
 
-func (this *TcpServer) LaunchTcpServ(listenAddr string, handler Handler, sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
+func (this *TcpServer) LaunchTcpServer(listenAddr string, handler Handler, sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
 	this.sessTimeout = sessTimeout
 	this.handler = handler
 	this.acceptLock = sync2.NewSemaphore(1, 0)
