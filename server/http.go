@@ -24,7 +24,7 @@ type httpRestApi struct {
 	httpPaths    []string
 }
 
-func LaunchHttpServ(listenAddr string, debugAddr string) (err error) {
+func LaunchHttpServer(listenAddr string, debugAddr string) (err error) {
 	if api != nil {
 		return nil
 	}
@@ -55,7 +55,7 @@ func LaunchHttpServ(listenAddr string, debugAddr string) (err error) {
 	return nil
 }
 
-func StopHttpServ() {
+func StopHttpServer() {
 	if api != nil && api.httpListener != nil {
 		api.httpListener.Close()
 		api.httpListener = nil
