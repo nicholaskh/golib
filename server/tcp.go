@@ -8,14 +8,10 @@ import (
 	log "github.com/nicholaskh/log4go"
 )
 
-type Handler interface {
-	Run(*Client)
-}
-
 type TcpServer struct {
 	*Server
 	sessTimeout         time.Duration
-	handler             Handler
+	handler             func(*Client)
 	acceptLock          *sync2.Semaphore
 	initialGoRoutineNum int
 }
@@ -34,7 +30,7 @@ func NewTcpServer(name string) (this *TcpServer) {
 	return
 }
 
-func (this *TcpServer) LaunchTcpServer(listenAddr string, handler Handler, sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
+func (this *TcpServer) LaunchTcpServer(listenAddr string, handler func(*Client), sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
 	this.sessTimeout = sessTimeout
 	this.handler = handler
 	this.acceptLock = sync2.NewSemaphore(1, 0)
@@ -74,7 +70,7 @@ func (this *TcpServer) startGoRoutine() {
 	if this.sessTimeout.Nanoseconds() > int64(0) {
 		go this.checkTimeout(client)
 	}
-	this.handler.Run(client)
+	this.handler(client)
 	client.done <- 0
 
 }
