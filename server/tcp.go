@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"net"
 	"time"
 
@@ -11,9 +12,15 @@ import (
 type TcpServer struct {
 	*Server
 	sessTimeout         time.Duration
-	handler             func(*Client)
+	clientHandler       ClientHandler
 	acceptLock          *sync2.Semaphore
 	initialGoRoutineNum int
+}
+
+type ClientHandler interface {
+	OnAccept(*Client)
+	OnRead(string)
+	OnClose()
 }
 
 type Client struct {
@@ -23,6 +30,10 @@ type Client struct {
 	done     chan byte
 }
 
+func (this *Client) WriteMsg(msg string) {
+	this.Conn.Write([]byte(msg))
+}
+
 func NewTcpServer(name string) (this *TcpServer) {
 	this = new(TcpServer)
 	this.Server = NewServer(name)
@@ -30,9 +41,9 @@ func NewTcpServer(name string) (this *TcpServer) {
 	return
 }
 
-func (this *TcpServer) LaunchTcpServer(listenAddr string, handler func(*Client), sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
+func (this *TcpServer) LaunchTcpServer(listenAddr string, clientHandler ClientHandler, sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
 	this.sessTimeout = sessTimeout
-	this.handler = handler
+	this.clientHandler = clientHandler
 	this.acceptLock = sync2.NewSemaphore(1, 0)
 	this.initialGoRoutineNum = initialGoRoutineNum
 	tcpAddr, _ := net.ResolveTCPAddr("tcp", listenAddr)
@@ -47,30 +58,56 @@ func (this *TcpServer) LaunchTcpServer(listenAddr string, handler func(*Client),
 	log.Info("Listening on %s", listenAddr)
 
 	for i := 0; i < int(this.initialGoRoutineNum); i++ {
-		go this.startGoRoutine()
+		go this.dealSingleClient()
 	}
 
 	return
 }
 
-func (this *TcpServer) startGoRoutine() {
+func (this *TcpServer) dealSingleClient() {
 	log.Debug("start server go routine")
 	this.acceptLock.Acquire()
 	conn, err := this.fd.(*net.TCPListener).AcceptTCP()
 	this.acceptLock.Release()
-
-	go this.startGoRoutine()
-
 	if err != nil {
 		log.Error("Accept error: %s", err.Error())
 	}
 
+	go this.dealSingleClient()
+
 	client := &Client{Conn: conn, LastTime: time.Now(), ticker: time.NewTicker(this.sessTimeout), done: make(chan byte)}
+	this.clientHandler.OnAccept(client)
 
 	if this.sessTimeout.Nanoseconds() > int64(0) {
 		go this.checkTimeout(client)
 	}
-	this.handler(client)
+
+	for {
+		input := make([]byte, 1460)
+		n, err := client.Conn.Read(input)
+
+		input = input[:n]
+
+		if err != nil {
+			if err == io.EOF {
+				log.Info("Client shutdown: %s", client.Conn.RemoteAddr())
+				this.clientHandler.OnClose()
+				return
+			} else if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
+				log.Error("Read from client[%s] error: %s", client.Conn.RemoteAddr(), err.Error())
+				this.clientHandler.OnClose()
+				return
+			}
+		}
+
+		client.LastTime = time.Now()
+
+		strInput := string(input)
+		log.Debug("input: %s", strInput)
+
+		this.clientHandler.OnRead(strInput)
+	}
+
 	client.done <- 0
 
 }
@@ -87,11 +124,12 @@ func (this *TcpServer) checkTimeout(client *Client) {
 			log.Debug("Check client timeout: %s", client.Conn.RemoteAddr())
 			if time.Now().After(client.LastTime.Add(this.sessTimeout)) {
 				log.Warn("Client connection timeout: %s", client.Conn.RemoteAddr())
-				client.Conn.Close()
+				this.clientHandler.OnClose()
 				return
 			}
 
 		case <-client.done:
+			this.clientHandler.OnClose()
 			return
 		}
 	}
