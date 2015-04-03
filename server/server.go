@@ -15,7 +15,7 @@ type Server struct {
 	StartedAt  time.Time
 	pid        int
 	hostname   string
-	fd         net.Listener
+	Fd         net.Listener
 }
 
 func NewServer(name string) (this *Server) {
