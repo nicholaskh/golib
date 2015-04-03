@@ -1,14 +1,15 @@
 package server
 
 import (
-	conf "github.com/nicholaskh/jsconf"
 	"net"
+	"os"
+	"syscall"
 	"time"
+
+	"github.com/funkygao/golib/signal"
 )
 
 type Server struct {
-	*conf.Conf
-
 	Name       string
 	configFile string
 	StartedAt  time.Time
@@ -20,6 +21,11 @@ type Server struct {
 func NewServer(name string) (this *Server) {
 	this = new(Server)
 	this.Name = name
+
+	this.StartedAt = time.Now()
+	this.hostname, _ = os.Hostname()
+	this.pid = os.Getpid()
+	signal.IgnoreSignal(syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGSTOP)
 
 	return
 }
