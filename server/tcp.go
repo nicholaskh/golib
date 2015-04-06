@@ -18,9 +18,13 @@ type TcpServer struct {
 
 type Client struct {
 	net.Conn
-	LastTime time.Time
-	Ticker   *time.Ticker
-	Done     chan byte
+	LastTime    time.Time
+	sessTimeout time.Duration
+	Done        chan byte
+}
+
+func NewClient(conn net.Conn, now time.Time, sessTimeout time.Duration) *Client {
+	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte)}
 }
 
 type ClientProcessor interface {
@@ -66,18 +70,19 @@ func (this *TcpServer) StopTcpServ() {
 	log.Info("HTTP server stopped")
 }
 
-func (this *TcpServer) CheckTimeout(client *Client, close func() error) {
+func (this *Client) CheckTimeout(close func() error) {
+	ticker := time.NewTicker(this.sessTimeout)
 	for {
 		select {
-		case <-client.Ticker.C:
-			log.Debug("Check client timeout: %s", client.Conn.RemoteAddr())
-			if time.Now().After(client.LastTime.Add(this.SessTimeout)) {
-				log.Warn("Client connection timeout: %s", client.Conn.RemoteAddr())
+		case <-ticker.C:
+			log.Debug("Check client timeout: %s", this.Conn.RemoteAddr())
+			if time.Now().After(this.LastTime.Add(this.sessTimeout)) {
+				log.Warn("Client connection timeout: %s", this.Conn.RemoteAddr())
 				close()
 				return
 			}
 
-		case <-client.Done:
+		case <-this.Done:
 			close()
 			return
 		}
