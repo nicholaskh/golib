@@ -2,9 +2,9 @@ package server
 
 import (
 	"net"
+	"sync"
 	"time"
 
-	"github.com/nicholaskh/golib/sync2"
 	log "github.com/nicholaskh/log4go"
 )
 
@@ -12,7 +12,7 @@ type TcpServer struct {
 	*Server
 	SessTimeout         time.Duration
 	clientProcessor     ClientProcessor
-	AcceptLock          *sync2.Semaphore
+	AcceptLock          sync.Mutex
 	initialGoRoutineNum int
 }
 
@@ -21,10 +21,13 @@ type Client struct {
 	LastTime    time.Time
 	sessTimeout time.Duration
 	Done        chan byte
+	Closed      bool
+	sync.Mutex
+	OnClose func()
 }
 
 func NewClient(conn net.Conn, now time.Time, sessTimeout time.Duration) *Client {
-	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte)}
+	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte), Closed: false}
 }
 
 type ClientProcessor interface {
@@ -45,7 +48,6 @@ func NewTcpServer(name string) (this *TcpServer) {
 func (this *TcpServer) LaunchTcpServer(listenAddr string, clientProcessor ClientProcessor, sessTimeout time.Duration, initialGoRoutineNum int) (err error) {
 	this.SessTimeout = sessTimeout
 	this.clientProcessor = clientProcessor
-	this.AcceptLock = sync2.NewSemaphore(1, 0)
 	this.initialGoRoutineNum = initialGoRoutineNum
 	tcpAddr, _ := net.ResolveTCPAddr("tcp", listenAddr)
 	ln, err := net.ListenTCP("tcp", tcpAddr)
@@ -70,7 +72,7 @@ func (this *TcpServer) StopTcpServ() {
 	log.Info("HTTP server stopped")
 }
 
-func (this *Client) CheckTimeout(close func() error) {
+func (this *Client) CheckTimeout() {
 	ticker := time.NewTicker(this.sessTimeout)
 	for {
 		select {
@@ -78,13 +80,26 @@ func (this *Client) CheckTimeout(close func() error) {
 			log.Debug("Check client timeout: %s", this.Conn.RemoteAddr())
 			if time.Now().After(this.LastTime.Add(this.sessTimeout)) {
 				log.Warn("Client connection timeout: %s", this.Conn.RemoteAddr())
-				close()
+				this.Close()
 				return
 			}
 
 		case <-this.Done:
-			close()
+			this.Close()
 			return
 		}
 	}
+}
+
+func (this *Client) Close() {
+	if this.OnClose != nil {
+		this.OnClose()
+	}
+	this.Mutex.Lock()
+	this.Closed = true
+	err := this.Conn.Close()
+	if err != nil {
+		log.Error(err)
+	}
+	this.Mutex.Unlock()
 }
