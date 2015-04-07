@@ -31,7 +31,7 @@ func NewClient(conn net.Conn, now time.Time, sessTimeout time.Duration) *Client 
 }
 
 type ClientProcessor interface {
-	Run()
+	Run(*Client)
 }
 
 func (this *Client) WriteMsg(msg string) {
@@ -61,13 +61,27 @@ func (this *TcpServer) LaunchTcpServer(listenAddr string, clientProcessor Client
 	log.Info("Listening on %s", listenAddr)
 
 	for i := 0; i < int(this.initialGoRoutineNum); i++ {
-		go this.clientProcessor.Run()
+		go this.startProcessorThread()
 	}
 
 	return
 }
 
-func (this *TcpServer) StopTcpServ() {
+func (this *TcpServer) startProcessorThread() {
+	log.Debug("start server go routine")
+	this.AcceptLock.Lock()
+	conn, err := this.Fd.(*net.TCPListener).AcceptTCP()
+	this.AcceptLock.Unlock()
+	if err != nil {
+		log.Error("Accept error: %s", err.Error())
+	}
+
+	go this.startProcessorThread()
+	client := NewClient(conn, time.Now(), this.SessTimeout)
+	this.clientProcessor.Run(client)
+}
+
+func (this *TcpServer) StopTcpServer() {
 	this.Fd.Close()
 	log.Info("HTTP server stopped")
 }
