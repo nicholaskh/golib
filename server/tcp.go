@@ -16,26 +16,8 @@ type TcpServer struct {
 	initialGoRoutineNum int
 }
 
-type Client struct {
-	net.Conn
-	LastTime    time.Time
-	sessTimeout time.Duration
-	Done        chan byte
-	Closed      bool
-	sync.Mutex
-	OnClose func()
-}
-
-func NewClient(conn net.Conn, now time.Time, sessTimeout time.Duration) *Client {
-	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte), Closed: false}
-}
-
 type ClientProcessor interface {
 	Run(*Client)
-}
-
-func (this *Client) WriteMsg(msg string) {
-	this.Conn.Write([]byte(msg))
 }
 
 func NewTcpServer(name string) (this *TcpServer) {
@@ -77,43 +59,11 @@ func (this *TcpServer) startProcessorThread() {
 	}
 
 	go this.startProcessorThread()
-	client := NewClient(conn, time.Now(), this.SessTimeout)
+	client := NewClient(conn, time.Now(), this.SessTimeout, CTYPE_TCP)
 	this.clientProcessor.Run(client)
 }
 
 func (this *TcpServer) StopTcpServer() {
 	this.Fd.Close()
 	log.Info("HTTP server stopped")
-}
-
-func (this *Client) CheckTimeout() {
-	ticker := time.NewTicker(this.sessTimeout)
-	for {
-		select {
-		case <-ticker.C:
-			log.Debug("Check client timeout: %s", this.Conn.RemoteAddr())
-			if time.Now().After(this.LastTime.Add(this.sessTimeout)) {
-				log.Warn("Client connection timeout: %s", this.Conn.RemoteAddr())
-				this.Close()
-				return
-			}
-
-		case <-this.Done:
-			this.Close()
-			return
-		}
-	}
-}
-
-func (this *Client) Close() {
-	if this.OnClose != nil {
-		this.OnClose()
-	}
-	this.Mutex.Lock()
-	this.Closed = true
-	err := this.Conn.Close()
-	if err != nil {
-		log.Error(err)
-	}
-	this.Mutex.Unlock()
 }
