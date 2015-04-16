@@ -36,7 +36,7 @@ func NewLruCache(maxEntries int) *LruCache {
 	}
 }
 
-// Add adds a value to the cache.
+// Set adds a value to the cache.
 func (c *LruCache) Set(key Key, value interface{}) {
 	c.Lock()
 
