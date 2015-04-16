@@ -54,16 +54,25 @@ func (this *TcpServer) startProcessorThread() {
 	this.AcceptLock.Lock()
 	conn, err := this.Fd.(*net.TCPListener).AcceptTCP()
 	this.AcceptLock.Unlock()
+
+	if this.Fd == nil {
+		return
+	}
+
 	if err != nil {
 		log.Error("Accept error: %s", err.Error())
 	}
 
 	go this.startProcessorThread()
+	if conn == nil {
+		return
+	}
 	client := NewClient(conn, time.Now(), this.SessTimeout, CTYPE_TCP)
 	this.clientProcessor.Run(client)
 }
 
 func (this *TcpServer) StopTcpServer() {
 	this.Fd.Close()
-	log.Info("TCP server stopped")
+	this.Fd = nil
+	log.Info("TCP server[%s] stopped", this.Name)
 }
