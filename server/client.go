@@ -18,14 +18,13 @@ type Client struct {
 	LastTime    time.Time
 	sessTimeout time.Duration
 	Done        chan byte
-	Closed      bool
 	sync.Mutex
 	OnClose func()
 	ctype   int8
 }
 
 func NewClient(conn net.Conn, now time.Time, sessTimeout time.Duration, ctype int8) *Client {
-	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte), Closed: false, ctype: ctype}
+	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte), ctype: ctype}
 }
 
 func (this *Client) WriteMsg(msg string) {
@@ -40,10 +39,14 @@ func (this *Client) CheckTimeout() {
 	for {
 		select {
 		case <-ticker.C:
-			log.Debug("Check client timeout: %s", this.Conn.RemoteAddr())
-			if time.Now().After(this.LastTime.Add(this.sessTimeout)) {
-				log.Warn("Client connection timeout: %s", this.Conn.RemoteAddr())
-				this.Close()
+			if this.IsConnected() {
+				log.Debug("Check client timeout: %s", this.Conn.RemoteAddr())
+				if time.Now().After(this.LastTime.Add(this.sessTimeout)) {
+					log.Warn("Client connection timeout: %s", this.Conn.RemoteAddr())
+					this.Close()
+					return
+				}
+			} else {
 				return
 			}
 
@@ -54,15 +57,24 @@ func (this *Client) CheckTimeout() {
 	}
 }
 
+func (this *Client) IsConnected() bool {
+	return this.Conn != nil
+}
+
+// reentrant safe
 func (this *Client) Close() {
+	if this.Conn == nil {
+		return
+	}
 	if this.OnClose != nil {
 		this.OnClose()
 	}
 	this.Mutex.Lock()
-	this.Closed = true
+	log.Info("Client shutdown: %s", this.Conn.RemoteAddr())
 	err := this.Conn.Close()
 	if err != nil {
 		log.Error(err)
 	}
+	this.Conn = nil
 	this.Mutex.Unlock()
 }
