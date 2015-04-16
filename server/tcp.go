@@ -65,5 +65,5 @@ func (this *TcpServer) startProcessorThread() {
 
 func (this *TcpServer) StopTcpServer() {
 	this.Fd.Close()
-	log.Info("HTTP server stopped")
+	log.Info("TCP server stopped")
 }
