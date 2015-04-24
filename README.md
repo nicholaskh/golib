@@ -13,4 +13,4 @@ golang common facilities lib
 *   and more
 *   oberver pattern
 
-[![Build Status](https://travis-ci.org/nicholaskh/golib.png?branch=master)](https://travis-ci.org/funkygao/golib)
+[![Build Status](https://travis-ci.org/nicholaskh/golib.png?branch=master)](https://travis-ci.org/nicholaskh/golib)

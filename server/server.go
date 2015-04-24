@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/funkygao/golib/signal"
+	"github.com/nicholaskh/golib/signal"
 )
 
 type Server struct {
