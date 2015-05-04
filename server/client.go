@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	CTYPE_TCP = iota
-	CTYPE_LONG_POLLING
+	CONN_TYPE_TCP = iota
+	CONN_TYPE_LONG_POLLING
 )
 
 type Client struct {
@@ -19,17 +19,17 @@ type Client struct {
 	sessTimeout time.Duration
 	Done        chan byte
 	sync.Mutex
-	OnClose func()
-	ctype   int8
+	OnClose   func()
+	conn_type int8
 }
 
 func NewClient(conn net.Conn, now time.Time, sessTimeout time.Duration, ctype int8) *Client {
-	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte), ctype: ctype}
+	return &Client{Conn: conn, LastTime: now, sessTimeout: sessTimeout, Done: make(chan byte), conn_type: ctype}
 }
 
 func (this *Client) WriteMsg(msg string) {
 	this.Conn.Write([]byte(msg))
-	if this.ctype == CTYPE_LONG_POLLING {
+	if this.conn_type == CONN_TYPE_LONG_POLLING {
 		this.Close()
 	}
 }
