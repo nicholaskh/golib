@@ -17,7 +17,7 @@ type TcpServer struct {
 }
 
 type ClientProcessor interface {
-	Run(*Client)
+	OnAccept(*Client)
 }
 
 func NewTcpServer(name string) (this *TcpServer) {
@@ -68,7 +68,7 @@ func (this *TcpServer) startProcessorThread() {
 		return
 	}
 	client := NewClient(conn, time.Now(), this.SessTimeout, CONN_TYPE_TCP)
-	this.clientProcessor.Run(client)
+	this.clientProcessor.OnAccept(client)
 }
 
 func (this *TcpServer) StopTcpServer() {
