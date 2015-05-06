@@ -40,7 +40,6 @@ func (this *Client) CheckTimeout() {
 		select {
 		case <-ticker.C:
 			if this.IsConnected() {
-				log.Debug("Check client timeout: %s", this.Conn.RemoteAddr())
 				if time.Now().After(this.LastTime.Add(this.sessTimeout)) {
 					log.Warn("Client connection timeout: %s", this.Conn.RemoteAddr())
 					this.Close()
