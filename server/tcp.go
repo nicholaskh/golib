@@ -67,7 +67,7 @@ func (this *TcpServer) startProcessorThread() {
 	if conn == nil {
 		return
 	}
-	client := NewClient(conn, time.Now(), this.SessTimeout, CONN_TYPE_TCP)
+	client := NewClient(conn, time.Now(), CONN_TYPE_TCP)
 	this.clientProcessor.OnAccept(client)
 }
 
