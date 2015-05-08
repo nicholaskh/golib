@@ -13,9 +13,10 @@ import (
 	_ "net/http/pprof" // localhost:xx/debug/pprof
 )
 
-var (
+type HttpJsonServer struct {
+	*Server
 	api *httpRestApi
-)
+}
 
 type httpRestApi struct {
 	httpListener net.Listener
@@ -24,20 +25,25 @@ type httpRestApi struct {
 	httpPaths    []string
 }
 
-func LaunchHttpServer(listenAddr string, debugAddr string) (err error) {
-	if api != nil {
+func NewHttpJsonServer() *HttpJsonServer {
+	this := new(HttpJsonServer)
+
+	return this
+}
+
+func (this *HttpJsonServer) LaunchHttpServer(listenAddr string, debugAddr string) (err error) {
+	if this.api != nil {
 		return nil
 	}
 
-	api = new(httpRestApi)
-	api.httpPaths = make([]string, 0, 10)
-	api.httpRouter = mux.NewRouter()
-	api.httpServer = &http.Server{Addr: listenAddr,
-		Handler: api.httpRouter}
+	this.api = new(httpRestApi)
+	this.api.httpPaths = make([]string, 0, 10)
+	this.api.httpRouter = mux.NewRouter()
+	this.api.httpServer = &http.Server{Addr: listenAddr, Handler: this.api.httpRouter}
 
-	api.httpListener, err = net.Listen("tcp", api.httpServer.Addr)
+	this.api.httpListener, err = net.Listen("tcp", this.api.httpServer.Addr)
 	if err != nil {
-		api = nil
+		this.api = nil
 		return err
 	}
 
@@ -47,7 +53,7 @@ func LaunchHttpServer(listenAddr string, debugAddr string) (err error) {
 		log.Debug("HTTP serving at %s", listenAddr)
 	}
 
-	go api.httpServer.Serve(api.httpListener)
+	go this.api.httpServer.Serve(this.api.httpListener)
 	if debugAddr != "" {
 		go http.ListenAndServe(debugAddr, nil)
 	}
@@ -55,20 +61,20 @@ func LaunchHttpServer(listenAddr string, debugAddr string) (err error) {
 	return nil
 }
 
-func StopHttpServer() {
-	if api != nil && api.httpListener != nil {
-		api.httpListener.Close()
-		api.httpListener = nil
+func (this *HttpJsonServer) StopHttpServer() {
+	if this.api != nil && this.api.httpListener != nil {
+		this.api.httpListener.Close()
+		this.api.httpListener = nil
 
 		log.Info("HTTP server stopped")
 	}
 }
 
-func Launched() bool {
-	return api != nil
+func (this *HttpJsonServer) Launched() bool {
+	return this.api != nil
 }
 
-func RegisterHttpApi(path string,
+func (this *HttpJsonServer) RegisterHttpApi(path string,
 	handlerFunc func(http.ResponseWriter,
 		*http.Request, map[string]interface{}) (interface{}, error)) *mux.Route {
 	wrappedFunc := func(w http.ResponseWriter, req *http.Request) {
@@ -77,7 +83,7 @@ func RegisterHttpApi(path string,
 			t1  = time.Now()
 		)
 
-		params, err := api.decodeHttpParams(w, req)
+		params, err := this.api.decodeHttpParams(w, req)
 		if err == nil {
 			ret, err = handlerFunc(w, req, params)
 		} else {
@@ -122,7 +128,7 @@ func RegisterHttpApi(path string,
 
 	// path can't be duplicated
 	isDup := false
-	for _, p := range api.httpPaths {
+	for _, p := range this.api.httpPaths {
 		if p == path {
 			log.Error("REST[%s] already registered", path)
 			isDup = true
@@ -131,14 +137,14 @@ func RegisterHttpApi(path string,
 	}
 
 	if !isDup {
-		api.httpPaths = append(api.httpPaths, path)
+		this.api.httpPaths = append(this.api.httpPaths, path)
 	}
 
-	return api.httpRouter.HandleFunc(path, wrappedFunc)
+	return this.api.httpRouter.HandleFunc(path, wrappedFunc)
 }
 
-func UnregisterAllHttpApi() {
-	api.httpPaths = api.httpPaths[:0]
+func (this *HttpJsonServer) UnregisterAllHttpApi() {
+	this.api.httpPaths = this.api.httpPaths[:0]
 }
 
 func (this *httpRestApi) decodeHttpParams(w http.ResponseWriter,
