@@ -17,10 +17,11 @@ type Client struct {
 	net.Conn
 	sync.Mutex
 	conn_type int8
+	Proto     *Protocol
 }
 
-func NewClient(conn net.Conn, now time.Time, ctype int8) *Client {
-	return &Client{Conn: conn, conn_type: ctype}
+func NewClient(conn net.Conn, now time.Time, ctype int8, proto *Protocol) *Client {
+	return &Client{Conn: conn, conn_type: ctype, Proto: proto}
 }
 
 func (this *Client) WriteMsg(msg string) {
