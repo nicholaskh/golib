@@ -34,6 +34,7 @@ func (this *Protocol) marshal(payload []byte) []byte {
 	return buf.Bytes()
 }
 
+//len+payload
 func (this *Protocol) Write(data []byte) (int, error) {
 	buf := this.marshal(data)
 	n, err := this.Conn.Write(buf)
