@@ -51,6 +51,24 @@ func Daemonize(chdir, closefd012 bool) int {
 		return -1
 	}
 
+    // fork twice so process group will not get a terminal
+	ret, ret2, err = syscall.RawSyscall(syscall.SYS_FORK, 0, 0, 0)
+	if err != 0 {
+		return -1
+	}
+
+	if ret2 < 0 {
+		os.Exit(-1)
+	}
+
+	if darwin && ret2 == 1 {
+		ret = 0
+	}
+
+	if ret > 0 {
+		os.Exit(0)
+	}
+
 	if chdir {
 		os.Chdir("/")
 	}
