@@ -23,23 +23,15 @@ func (this *Protocol) SetConn(conn net.Conn) {
 	this.Conn = conn
 }
 
-func (this *Protocol) marshal(payload []byte) []byte {
+//len+payload
+func (this *Protocol) Marshal(payload []byte) []byte {
 	buf := bytes.NewBuffer([]byte{})
 	dataBuff := bytes.NewBuffer([]byte{})
-	x := int32(len(payload))
-	binary.Write(buf, binary.BigEndian, x)
+	binary.Write(buf, binary.BigEndian, int32(len(payload)))
 	binary.Write(dataBuff, binary.BigEndian, payload)
 	buf.Write(dataBuff.Bytes())
 
 	return buf.Bytes()
-}
-
-//len+payload
-func (this *Protocol) Write(data []byte) (int, error) {
-	buf := this.marshal(data)
-	n, err := this.Conn.Write(buf)
-
-	return n, err
 }
 
 func (this *Protocol) Read() ([]byte, error) {
