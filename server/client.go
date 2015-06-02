@@ -26,7 +26,7 @@ func NewClient(conn net.Conn, now time.Time, ctype int8, proto *Protocol) *Clien
 
 func (this *Client) WriteMsg(msg string) {
 	data := this.Proto.Marshal([]byte(msg))
-	this.Conn.Write([]byte(msg))
+	this.Conn.Write(data)
 	if this.conn_type == CONN_TYPE_LONG_POLLING {
 		this.Close()
 	}
