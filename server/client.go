@@ -17,6 +17,7 @@ type Client struct {
 	sync.Mutex
 	conn_type int8
 	Proto     *Protocol
+	net.Conn
 }
 
 func NewClient(conn net.Conn, now time.Time, ctype int8, proto *Protocol) *Client {
@@ -24,27 +25,28 @@ func NewClient(conn net.Conn, now time.Time, ctype int8, proto *Protocol) *Clien
 }
 
 func (this *Client) WriteMsg(msg string) {
-	this.Proto.Conn.Write([]byte(msg))
+	data := this.Proto.Marshal([]byte(msg))
+	this.Conn.Write([]byte(msg))
 	if this.conn_type == CONN_TYPE_LONG_POLLING {
 		this.Close()
 	}
 }
 
 func (this *Client) IsConnected() bool {
-	return this.Proto.Conn != nil
+	return this.Conn != nil
 }
 
 // reentrant safe
 func (this *Client) Close() {
-	if this.Proto.Conn == nil {
+	if this.Conn == nil {
 		return
 	}
 	this.Mutex.Lock()
-	log.Info("Client shutdown: %s", this.Proto.Conn.RemoteAddr())
-	err := this.Proto.Conn.Close()
+	log.Info("Client shutdown: %s", this.Conn.RemoteAddr())
+	err := this.Conn.Close()
 	if err != nil {
 		log.Error(err)
 	}
-	this.Proto.Conn = nil
+	this.Conn = nil
 	this.Mutex.Unlock()
 }
