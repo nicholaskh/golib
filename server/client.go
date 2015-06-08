@@ -21,7 +21,7 @@ type Client struct {
 }
 
 func NewClient(conn net.Conn, now time.Time, ctype int8, proto *Protocol) *Client {
-	return &Client{conn_type: ctype, Proto: proto}
+	return &Client{conn_type: ctype, Proto: proto, Conn: conn}
 }
 
 func (this *Client) WriteMsg(msg string) {
