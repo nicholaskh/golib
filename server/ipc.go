@@ -31,6 +31,7 @@ func KillProcess(pidFile string) error {
 		return err
 	}
 
+	process.Wait()
 	syscall.Unlink(pidFile)
 	return nil
 }

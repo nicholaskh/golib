@@ -4,11 +4,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"syscall"
 )
 
 func InstanceLocked(lockfileName string) bool {
 	_, err := os.Stat(lockfileName)
+	if err == nil {
+		var pidBytes []byte
+		pidBytes, err = ioutil.ReadFile(lockfileName)
+		pid, _ := strconv.Atoi(string(pidBytes))
+		err = syscall.Kill(pid, 0)
+	}
+
 	return err == nil
 }
 
