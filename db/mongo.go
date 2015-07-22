@@ -15,7 +15,14 @@ type MongoInfo struct {
 	SocketTimeout time.Duration
 }
 
-func MgoSession(addr string, info MongoInfo) *mgo.Session {
+func NewMongoInfo(syncTimeout, socketTimeout time.Duration) *MongoInfo {
+	this := new(MongoInfo)
+	this.SyncTimeout = syncTimeout
+	this.SocketTimeout = socketTimeout
+	return this
+}
+
+func MgoSession(addr string, info *MongoInfo) *mgo.Session {
 	if mgoSession == nil {
 		mgoSession = getMongoSession(addr, info)
 	}
@@ -23,7 +30,7 @@ func MgoSession(addr string, info MongoInfo) *mgo.Session {
 	return mgoSession
 }
 
-func getMongoSession(addr string, info MongoInfo) *mgo.Session {
+func getMongoSession(addr string, info *MongoInfo) *mgo.Session {
 	var err error
 	mgoSession, err = mgo.Dial(addr)
 	if err != nil {
@@ -44,7 +51,7 @@ type MgoSessionPool struct {
 	pool chan *mgo.Session
 }
 
-func NewMgoSessionPool(addr string, size int, info MongoInfo) *MgoSessionPool {
+func NewMgoSessionPool(addr string, size int, info *MongoInfo) *MgoSessionPool {
 	this := new(MgoSessionPool)
 	this.pool = make(chan *mgo.Session, size)
 	for i := 0; i < size; i++ {
