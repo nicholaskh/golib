@@ -3,7 +3,6 @@ package server
 import (
 	"net"
 	"sync"
-	"time"
 
 	log "github.com/nicholaskh/log4go"
 )
@@ -20,7 +19,7 @@ type Client struct {
 	net.Conn
 }
 
-func NewClient(conn net.Conn, now time.Time, ctype int8, proto *Protocol) *Client {
+func NewClient(conn net.Conn, ctype int8, proto *Protocol) *Client {
 	return &Client{conn_type: ctype, Proto: proto, Conn: conn}
 }
 

@@ -4,9 +4,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"io"
+	"math"
 	"net"
 
 	log "github.com/nicholaskh/log4go"
+)
+
+const (
+	HEAD_LENGTH = 4
 )
 
 type Protocol struct {
@@ -35,26 +41,43 @@ func (this *Protocol) Marshal(payload []byte) []byte {
 }
 
 func (this *Protocol) Read() ([]byte, error) {
-	buf := make([]byte, 4)
-	n, err := this.Conn.Read(buf)
+	buf := make([]byte, HEAD_LENGTH)
+	err := this.ReadN(this.Conn, buf, HEAD_LENGTH)
 	if err != nil {
 		log.Error("[Protocol] Read data length error: %s", err.Error())
 		return []byte{}, err
 	}
-	buf = buf[0:n]
-	b_buf := bytes.NewBuffer(buf)
+	//data length
+	b_buf := bytes.NewBuffer(buf[:4])
 	var dataLength int32
 	binary.Read(b_buf, binary.BigEndian, &dataLength)
-	data := make([]byte, dataLength)
-	n, err = this.Conn.Read(data)
-	if err != nil {
+
+	//app + data
+	payloadLength := int(dataLength)
+	if payloadLength > math.MaxInt64 || payloadLength < 0 {
+		return []byte{}, errors.New("[Protocol] Payload out of length")
+	}
+	payload := make([]byte, payloadLength)
+	err = this.ReadN(this.Conn, payload, payloadLength)
+	if err != nil && err != io.EOF {
 		log.Error("[Protocol] Read data error: %s", err.Error())
 		return []byte{}, err
 	}
-	if int32(n) != dataLength {
-		err = errors.New("[Protocol] Data payload length not correct")
-		log.Error("[Protocol] Data payload length not correct, expect %d, give %d", dataLength, n)
-		return []byte{}, err
+
+	return payload, nil
+}
+
+func (this *Protocol) ReadN(conn net.Conn, buf []byte, n int) error {
+	buffer := bytes.NewBuffer([]byte{})
+	for n > 0 {
+		b_buf := make([]byte, n)
+		readN, err := conn.Read(b_buf)
+		if err != nil {
+			return err
+		}
+		n -= readN
+		buffer.Write(b_buf)
 	}
-	return data, nil
+	copy(buf, buffer.Bytes())
+	return nil
 }
