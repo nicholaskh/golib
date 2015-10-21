@@ -44,7 +44,9 @@ func (this *Protocol) Read() ([]byte, error) {
 	buf := make([]byte, HEAD_LENGTH)
 	err := this.ReadN(this.Conn, buf, HEAD_LENGTH)
 	if err != nil {
-		log.Error("[Protocol] Read data length error: %s", err.Error())
+		if err != io.EOF {
+			log.Error("[Protocol] Read data length error: %s", err.Error())
+		}
 		return []byte{}, err
 	}
 	//data length
