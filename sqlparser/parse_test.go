@@ -4,505 +4,508 @@
 
 package sqlparser
 
-import "testing"
+import (
+    "testing"
+    "fmt"
+)
 
 func TestValid(t *testing.T) {
 	validSQL := []struct {
 		input  string
 		output string
 	}{{
-		input: "select 1 from t",
-	}, {
-		input: "select .1 from t",
-	}, {
-		input: "select 1.2e1 from t",
-	}, {
-		input: "select 1.2e+1 from t",
-	}, {
-		input: "select 1.2e-1 from t",
-	}, {
-		input: "select 08.3 from t",
-	}, {
-		input: "select -1 from t where b = -2",
-	}, {
-		input:  "select - -1 from t",
-		output: "select 1 from t",
-	}, {
-		input:  "select 1 from t // aa",
-		output: "select 1 from t",
-	}, {
-		input:  "select 1 from t -- aa",
-		output: "select 1 from t",
-	}, {
-		input: "select /* simplest */ 1 from t",
-	}, {
-		input:  "select /* keyword col */ `By` from t",
-		output: "select /* keyword col */ `by` from t",
-	}, {
-		input: "select /* double star **/ 1 from t",
-	}, {
-		input: "select /* double */ /* comment */ 1 from t",
-	}, {
-		input:  "select /* back-quote */ 1 from `t`",
-		output: "select /* back-quote */ 1 from t",
-	}, {
-		input:  "select /* back-quote keyword */ 1 from `By`",
-		output: "select /* back-quote keyword */ 1 from `By`",
-	}, {
-		input: "select /* @ */ @@a from b",
-	}, {
-		input: "select /* \\0 */ '\\0' from a",
-	}, {
-		input:  "select 1 /* drop this comment */ from t",
-		output: "select 1 from t",
-	}, {
-		input: "select /* union */ 1 from t union select 1 from t",
-	}, {
-		input: "select /* double union */ 1 from t union select 1 from t union select 1 from t",
-	}, {
-		input: "select /* union all */ 1 from t union all select 1 from t",
-	}, {
-		input: "select /* minus */ 1 from t minus select 1 from t",
-	}, {
-		input: "select /* except */ 1 from t except select 1 from t",
-	}, {
-		input: "select /* intersect */ 1 from t intersect select 1 from t",
-	}, {
-		input: "select /* distinct */ distinct 1 from t",
-	}, {
-		input: "select /* for update */ 1 from t for update",
-	}, {
-		input: "select /* lock in share mode */ 1 from t lock in share mode",
-	}, {
-		input: "select /* select list */ 1, 2 from t",
-	}, {
-		input: "select /* * */ * from t",
-	}, {
-		input:  "select /* column alias */ a b from t",
-		output: "select /* column alias */ a as b from t",
-	}, {
-		input: "select /* column alias with as */ a as b from t",
-	}, {
-		input:  "select /* keyword column alias */ a as `By` from t",
-		output: "select /* keyword column alias */ a as `by` from t",
-	}, {
-		input: "select /* a.* */ a.* from t",
-	}, {
-		input: "select /* `By`.* */ `By`.* from t",
-	}, {
-		input: "select /* select with bool expr */ a = b from t",
-	}, {
-		input: "select /* case_when */ case when a = b then c end from t",
-	}, {
-		input: "select /* case_when_else */ case when a = b then c else d end from t",
-	}, {
-		input: "select /* case_when_when_else */ case when a = b then c when b = d then d else d end from t",
-	}, {
-		input: "select /* case */ case aa when a = b then c end from t",
-	}, {
-		input: "select /* parenthesis */ 1 from (t)",
-	}, {
-		input: "select /* table list */ 1 from t1, t2",
-	}, {
-		input: "select /* parenthessis in table list 1 */ 1 from (t1), t2",
-	}, {
-		input: "select /* parenthessis in table list 2 */ 1 from t1, (t2)",
-	}, {
-		input: "select /* use */ 1 from t1 use index (a) where b = 1",
-	}, {
-		input:  "select /* keyword index */ 1 from t1 use index (`By`) where b = 1",
-		output: "select /* keyword index */ 1 from t1 use index (`by`) where b = 1",
-	}, {
-		input: "select /* ignore */ 1 from t1 as t2 ignore index (a), t3 use index (b) where b = 1",
-	}, {
-		input: "select /* use */ 1 from t1 as t2 use index (a), t3 use index (b) where b = 1",
-	}, {
-		input: "select /* force */ 1 from t1 as t2 force index (a), t3 force index (b) where b = 1",
-	}, {
-		input:  "select /* table alias */ 1 from t t1",
-		output: "select /* table alias */ 1 from t as t1",
-	}, {
-		input: "select /* table alias with as */ 1 from t as t1",
-	}, {
-		input: "select /* keyword table alias */ 1 from t as `By`",
-	}, {
-		input: "select /* join */ 1 from t1 join t2",
-	}, {
-		input: "select /* straight_join */ 1 from t1 straight_join t2",
-	}, {
-		input: "select /* left join */ 1 from t1 left join t2",
-	}, {
-		input:  "select /* left outer join */ 1 from t1 left outer join t2",
-		output: "select /* left outer join */ 1 from t1 left join t2",
-	}, {
-		input: "select /* right join */ 1 from t1 right join t2",
-	}, {
-		input:  "select /* right outer join */ 1 from t1 right outer join t2",
-		output: "select /* right outer join */ 1 from t1 right join t2",
-	}, {
-		input:  "select /* inner join */ 1 from t1 inner join t2",
-		output: "select /* inner join */ 1 from t1 join t2",
-	}, {
-		input: "select /* cross join */ 1 from t1 cross join t2",
-	}, {
-		input: "select /* natural join */ 1 from t1 natural join t2",
-	}, {
-		input: "select /* join on */ 1 from t1 join t2 on a = b",
-	}, {
-		input: "select /* s.t */ 1 from s.t",
-	}, {
-		input: "select /* keyword schema & table name */ 1 from `By`.`bY`",
-	}, {
-		input: "select /* select in from */ 1 from (select 1 from t)",
-	}, {
-		input: "select /* where */ 1 from t where a = b",
-	}, {
-		input: "select /* and */ 1 from t where a = b and a = c",
-	}, {
-		input: "select /* or */ 1 from t where a = b or a = c",
-	}, {
-		input: "select /* not */ 1 from t where not a = b",
-	}, {
-		input: "select /* bool is */ 1 from t where a = b is null",
-	}, {
-		input: "select /* bool is not */ 1 from t where a = b is not false",
-	}, {
-		input: "select /* true */ 1 from t where true",
-	}, {
-		input: "select /* false */ 1 from t where false",
-	}, {
-		input: "select /* exists */ 1 from t where exists (select 1 from t)",
-	}, {
-		input: "select /* keyrange */ 1 from t where keyrange(1, 2)",
-	}, {
-		input: "select /* (boolean) */ 1 from t where not (a = b)",
-	}, {
-		input: "select /* in value list */ 1 from t where a in (b, c)",
-	}, {
-		input: "select /* in select */ 1 from t where a in (select 1 from t)",
-	}, {
-		input: "select /* not in */ 1 from t where a not in (b, c)",
-	}, {
-		input: "select /* like */ 1 from t where a like b",
-	}, {
-		input: "select /* not like */ 1 from t where a not like b",
-	}, {
-		input: "select /* between */ 1 from t where a between b and c",
-	}, {
-		input: "select /* not between */ 1 from t where a not between b and c",
-	}, {
-		input: "select /* is null */ 1 from t where a is null",
-	}, {
-		input: "select /* is not null */ 1 from t where a is not null",
-	}, {
-		input: "select /* is true */ 1 from t where a is true",
-	}, {
-		input: "select /* is not true */ 1 from t where a is not true",
-	}, {
-		input: "select /* is false */ 1 from t where a is false",
-	}, {
-		input: "select /* is not false */ 1 from t where a is not false",
-	}, {
-		input: "select /* < */ 1 from t where a < b",
-	}, {
-		input: "select /* <= */ 1 from t where a <= b",
-	}, {
-		input: "select /* >= */ 1 from t where a >= b",
-	}, {
-		input: "select /* > */ 1 from t where a > b",
-	}, {
-		input: "select /* != */ 1 from t where a != b",
-	}, {
-		input:  "select /* <> */ 1 from t where a <> b",
-		output: "select /* <> */ 1 from t where a != b",
-	}, {
-		input: "select /* <=> */ 1 from t where a <=> b",
-	}, {
-		input: "select /* != */ 1 from t where a != b",
-	}, {
-		input: "select /* single value expre list */ 1 from t where a in (b)",
-	}, {
-		input: "select /* select as a value expression */ 1 from t where a = (select a from t)",
-	}, {
-		input: "select /* parenthesised value */ 1 from t where a = (b)",
-	}, {
-		input: "select /* over-parenthesize */ ((1)) from t where ((a)) in (((1))) and ((a, b)) in ((((1, 1))), ((2, 2)))",
-	}, {
-		input: "select /* dot-parenthesize */ (a.b) from t where (b.c) = 2",
-	}, {
-		input: "select /* & */ 1 from t where a = b & c",
-	}, {
-		input: "select /* & */ 1 from t where a = b & c",
-	}, {
-		input: "select /* | */ 1 from t where a = b | c",
-	}, {
-		input: "select /* ^ */ 1 from t where a = b ^ c",
-	}, {
-		input: "select /* + */ 1 from t where a = b + c",
-	}, {
-		input: "select /* - */ 1 from t where a = b - c",
-	}, {
-		input: "select /* * */ 1 from t where a = b * c",
-	}, {
-		input: "select /* / */ 1 from t where a = b / c",
-	}, {
-		input: "select /* % */ 1 from t where a = b % c",
-	}, {
-		input: "select /* << */ 1 from t where a = b << c",
-	}, {
-		input: "select /* >> */ 1 from t where a = b >> c",
-	}, {
-		input:  "select /* % no space */ 1 from t where a = b%c",
-		output: "select /* % no space */ 1 from t where a = b % c",
-	}, {
-		input: "select /* u+ */ 1 from t where a = +b",
-	}, {
-		input: "select /* u- */ 1 from t where a = -b",
-	}, {
-		input: "select /* u~ */ 1 from t where a = ~b",
-	}, {
-		input: "select /* empty function */ 1 from t where a = b()",
-	}, {
-		input: "select /* function with 1 param */ 1 from t where a = b(c)",
-	}, {
-		input: "select /* function with many params */ 1 from t where a = b(c, d)",
-	}, {
-		input: "select /* if as func */ 1 from t where a = if(b)",
-	}, {
-		input: "select /* function with distinct */ count(distinct a) from t",
-	}, {
-		input: "select /* a */ a from t",
-	}, {
-		input: "select /* a.b */ a.b from t",
-	}, {
-		input:  "select /* keyword a.b */ `By`.`bY` from t",
-		output: "select /* keyword a.b */ `By`.`by` from t",
-	}, {
-		input: "select /* string */ 'a' from t",
-	}, {
-		input:  "select /* double quoted string */ \"a\" from t",
-		output: "select /* double quoted string */ 'a' from t",
-	}, {
-		input:  "select /* quote quote in string */ 'a''a' from t",
-		output: "select /* quote quote in string */ 'a\\'a' from t",
-	}, {
-		input:  "select /* double quote quote in string */ \"a\"\"a\" from t",
-		output: "select /* double quote quote in string */ 'a\\\"a' from t",
-	}, {
-		input:  "select /* quote in double quoted string */ \"a'a\" from t",
-		output: "select /* quote in double quoted string */ 'a\\'a' from t",
-	}, {
-		input: "select /* backslash quote in string */ 'a\\'a' from t",
-	}, {
-		input: "select /* literal backslash in string */ 'a\\\\na' from t",
-	}, {
-		input: "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
-	}, {
-		input:  "select /* non-escape */ '\\x' from t",
-		output: "select /* non-escape */ 'x' from t",
-	}, {
-		input: "select /* unescaped backslash */ '\\n' from t",
-	}, {
-		input: "select /* value argument */ :a from t",
-	}, {
-		input: "select /* value argument with digit */ :a1 from t",
-	}, {
-		input: "select /* value argument with dot */ :a.b from t",
-	}, {
-		input:  "select /* positional argument */ ? from t",
-		output: "select /* positional argument */ :v1 from t",
-	}, {
-		input:  "select /* multiple positional arguments */ ?, ? from t",
-		output: "select /* multiple positional arguments */ :v1, :v2 from t",
-	}, {
-		input: "select /* list arg */ * from t where a in ::list",
-	}, {
-		input: "select /* list arg not in */ * from t where a not in ::list",
-	}, {
-		input: "select /* null */ null from t",
-	}, {
-		input: "select /* octal */ 010 from t",
-	}, {
-		input: "select /* hex */ 0xf0 from t",
-	}, {
-		input: "select /* hex caps */ 0xF0 from t",
-	}, {
-		input: "select /* float */ 0.1 from t",
-	}, {
-		input: "select /* group by */ 1 from t group by a",
-	}, {
-		input: "select /* having */ 1 from t having a = b",
-	}, {
-		input:  "select /* simple order by */ 1 from t order by a",
-		output: "select /* simple order by */ 1 from t order by a asc",
-	}, {
-		input: "select /* order by asc */ 1 from t order by a asc",
-	}, {
-		input: "select /* order by desc */ 1 from t order by a desc",
-	}, {
-		input: "select /* limit a */ 1 from t limit a",
-	}, {
-		input: "select /* limit a,b */ 1 from t limit a, b",
-	}, {
-		input:  "select /* binary unary */ a- -b from t",
-		output: "select /* binary unary */ a - -b from t",
-	}, {
-		input: "select /* - - */ - -b from t",
-	}, {
-		input: "select /* dual */ 1 from dual",
-	}, {
-		input:  "select /* Dual */ 1 from Dual",
-		output: "select /* Dual */ 1 from dual",
-	}, {
-		input:  "select /* DUAL */ 1 from Dual",
-		output: "select /* DUAL */ 1 from dual",
-	}, {
+//		input: "select 1 from t",
+//	}, {
+//		input: "select .1 from t",
+//	}, {
+//		input: "select 1.2e1 from t",
+//	}, {
+//		input: "select 1.2e+1 from t",
+//	}, {
+//		input: "select 1.2e-1 from t",
+//	}, {
+//		input: "select 08.3 from t",
+//	}, {
+        input: "select -1 from t t2 where b = -2",
+	}, {
+//		input:  "select - -1 from t",
+//		output: "select 1 from t",
+//	}, {
+//		input:  "select 1 from t // aa",
+//		output: "select 1 from t",
+//	}, {
+//		input:  "select 1 from t -- aa",
+//		output: "select 1 from t",
+//	}, {
+//		input: "select /* simplest */ 1 from t",
+//	}, {
+//		input:  "select /* keyword col */ `By` from t",
+//		output: "select /* keyword col */ `by` from t",
+//	}, {
+//		input: "select /* double star **/ 1 from t",
+//	}, {
+//		input: "select /* double */ /* comment */ 1 from t",
+//	}, {
+//		input:  "select /* back-quote */ 1 from `t`",
+//		output: "select /* back-quote */ 1 from t",
+//	}, {
+//		input:  "select /* back-quote keyword */ 1 from `By`",
+//		output: "select /* back-quote keyword */ 1 from `By`",
+//	}, {
+//		input: "select /* @ */ @@a from b",
+//	}, {
+//		input: "select /* \\0 */ '\\0' from a",
+//	}, {
+//		input:  "select 1 /* drop this comment */ from t",
+//		output: "select 1 from t",
+//	}, {
+//		input: "select /* union */ 1 from t union select 1 from t",
+//	}, {
+//		input: "select /* double union */ 1 from t union select 1 from t union select 1 from t",
+//	}, {
+//		input: "select /* union all */ 1 from t union all select 1 from t",
+//	}, {
+//		input: "select /* minus */ 1 from t minus select 1 from t",
+//	}, {
+//		input: "select /* except */ 1 from t except select 1 from t",
+//	}, {
+//		input: "select /* intersect */ 1 from t intersect select 1 from t",
+//	}, {
+//		input: "select /* distinct */ distinct 1 from t",
+//	}, {
+//		input: "select /* for update */ 1 from t for update",
+//	}, {
+//		input: "select /* lock in share mode */ 1 from t lock in share mode",
+//	}, {
+//		input: "select /* select list */ 1, 2 from t",
+//	}, {
+//		input: "select /* * */ * from t",
+//	}, {
+//		input:  "select /* column alias */ a b from t",
+//		output: "select /* column alias */ a as b from t",
+//	}, {
+//		input: "select /* column alias with as */ a as b from t",
+//	}, {
+//		input:  "select /* keyword column alias */ a as `By` from t",
+//		output: "select /* keyword column alias */ a as `by` from t",
+//	}, {
+//		input: "select /* a.* */ a.* from t",
+//	}, {
+//		input: "select /* `By`.* */ `By`.* from t",
+//	}, {
+//		input: "select /* select with bool expr */ a = b from t",
+//	}, {
+//		input: "select /* case_when */ case when a = b then c end from t",
+//	}, {
+//		input: "select /* case_when_else */ case when a = b then c else d end from t",
+//	}, {
+//		input: "select /* case_when_when_else */ case when a = b then c when b = d then d else d end from t",
+//	}, {
+//		input: "select /* case */ case aa when a = b then c end from t",
+//	}, {
+//		input: "select /* parenthesis */ 1 from (t)",
+//	}, {
+//		input: "select /* table list */ 1 from t1, t2",
+//	}, {
+//		input: "select /* parenthessis in table list 1 */ 1 from (t1), t2",
+//	}, {
+//		input: "select /* parenthessis in table list 2 */ 1 from t1, (t2)",
+//	}, {
+//		input: "select /* use */ 1 from t1 use index (a) where b = 1",
+//	}, {
+//		input:  "select /* keyword index */ 1 from t1 use index (`By`) where b = 1",
+//		output: "select /* keyword index */ 1 from t1 use index (`by`) where b = 1",
+//	}, {
+//		input: "select /* ignore */ 1 from t1 as t2 ignore index (a), t3 use index (b) where b = 1",
+//	}, {
+//		input: "select /* use */ 1 from t1 as t2 use index (a), t3 use index (b) where b = 1",
+//	}, {
+//		input: "select /* force */ 1 from t1 as t2 force index (a), t3 force index (b) where b = 1",
+//	}, {
+//		input:  "select /* table alias */ 1 from t t1",
+//		output: "select /* table alias */ 1 from t as t1",
+//	}, {
+//		input: "select /* table alias with as */ 1 from t as t1",
+//	}, {
+//		input: "select /* keyword table alias */ 1 from t as `By`",
+//	}, {
+//		input: "select /* join */ 1 from t1 join t2",
+//	}, {
+//		input: "select /* straight_join */ 1 from t1 straight_join t2",
+//	}, {
+//		input: "select /* left join */ 1 from t1 left join t2",
+//	}, {
+//		input:  "select /* left outer join */ 1 from t1 left outer join t2",
+//		output: "select /* left outer join */ 1 from t1 left join t2",
+//	}, {
+//		input: "select /* right join */ 1 from t1 right join t2",
+//	}, {
+//		input:  "select /* right outer join */ 1 from t1 right outer join t2",
+//		output: "select /* right outer join */ 1 from t1 right join t2",
+//	}, {
+//		input:  "select /* inner join */ 1 from t1 inner join t2",
+//		output: "select /* inner join */ 1 from t1 join t2",
+//	}, {
+//		input: "select /* cross join */ 1 from t1 cross join t2",
+//	}, {
+//		input: "select /* natural join */ 1 from t1 natural join t2",
+//	}, {
+//		input: "select /* join on */ 1 from t1 join t2 on a = b",
+//	}, {
+//		input: "select /* s.t */ 1 from s.t",
+//	}, {
+//		input: "select /* keyword schema & table name */ 1 from `By`.`bY`",
+//	}, {
+//		input: "select /* select in from */ 1 from (select 1 from t)",
+//	}, {
+//		input: "select /* where */ 1 from t where a = b",
+//	}, {
+//		input: "select /* and */ 1 from t where a = b and a = c",
+//	}, {
+//		input: "select /* or */ 1 from t where a = b or a = c",
+//	}, {
+//		input: "select /* not */ 1 from t where not a = b",
+//	}, {
+//		input: "select /* bool is */ 1 from t where a = b is null",
+//	}, {
+//		input: "select /* bool is not */ 1 from t where a = b is not false",
+//	}, {
+//		input: "select /* true */ 1 from t where true",
+//	}, {
+//		input: "select /* false */ 1 from t where false",
+//	}, {
+//		input: "select /* exists */ 1 from t where exists (select 1 from t)",
+//	}, {
+//		input: "select /* keyrange */ 1 from t where keyrange(1, 2)",
+//	}, {
+//		input: "select /* (boolean) */ 1 from t where not (a = b)",
+//	}, {
+//		input: "select /* in value list */ 1 from t where a in (b, c)",
+//	}, {
+//		input: "select /* in select */ 1 from t where a in (select 1 from t)",
+//	}, {
+//		input: "select /* not in */ 1 from t where a not in (b, c)",
+//	}, {
+//		input: "select /* like */ 1 from t where a like b",
+//	}, {
+//		input: "select /* not like */ 1 from t where a not like b",
+//	}, {
+//		input: "select /* between */ 1 from t where a between b and c",
+//	}, {
+//		input: "select /* not between */ 1 from t where a not between b and c",
+//	}, {
+//		input: "select /* is null */ 1 from t where a is null",
+//	}, {
+//		input: "select /* is not null */ 1 from t where a is not null",
+//	}, {
+//		input: "select /* is true */ 1 from t where a is true",
+//	}, {
+//		input: "select /* is not true */ 1 from t where a is not true",
+//	}, {
+//		input: "select /* is false */ 1 from t where a is false",
+//	}, {
+//		input: "select /* is not false */ 1 from t where a is not false",
+//	}, {
+//		input: "select /* < */ 1 from t where a < b",
+//	}, {
+//		input: "select /* <= */ 1 from t where a <= b",
+//	}, {
+//		input: "select /* >= */ 1 from t where a >= b",
+//	}, {
+//		input: "select /* > */ 1 from t where a > b",
+//	}, {
+//		input: "select /* != */ 1 from t where a != b",
+//	}, {
+//		input:  "select /* <> */ 1 from t where a <> b",
+//		output: "select /* <> */ 1 from t where a != b",
+//	}, {
+//		input: "select /* <=> */ 1 from t where a <=> b",
+//	}, {
+//		input: "select /* != */ 1 from t where a != b",
+//	}, {
+//		input: "select /* single value expre list */ 1 from t where a in (b)",
+//	}, {
+//		input: "select /* select as a value expression */ 1 from t where a = (select a from t)",
+//	}, {
+//		input: "select /* parenthesised value */ 1 from t where a = (b)",
+//	}, {
+//		input: "select /* over-parenthesize */ ((1)) from t where ((a)) in (((1))) and ((a, b)) in ((((1, 1))), ((2, 2)))",
+//	}, {
+//		input: "select /* dot-parenthesize */ (a.b) from t where (b.c) = 2",
+//	}, {
+//		input: "select /* & */ 1 from t where a = b & c",
+//	}, {
+//		input: "select /* & */ 1 from t where a = b & c",
+//	}, {
+//		input: "select /* | */ 1 from t where a = b | c",
+//	}, {
+//		input: "select /* ^ */ 1 from t where a = b ^ c",
+//	}, {
+//		input: "select /* + */ 1 from t where a = b + c",
+//	}, {
+//		input: "select /* - */ 1 from t where a = b - c",
+//	}, {
+//		input: "select /* * */ 1 from t where a = b * c",
+//	}, {
+//		input: "select /* / */ 1 from t where a = b / c",
+//	}, {
+//		input: "select /* % */ 1 from t where a = b % c",
+//	}, {
+//		input: "select /* << */ 1 from t where a = b << c",
+//	}, {
+//		input: "select /* >> */ 1 from t where a = b >> c",
+//	}, {
+//		input:  "select /* % no space */ 1 from t where a = b%c",
+//		output: "select /* % no space */ 1 from t where a = b % c",
+//	}, {
+//		input: "select /* u+ */ 1 from t where a = +b",
+//	}, {
+//		input: "select /* u- */ 1 from t where a = -b",
+//	}, {
+//		input: "select /* u~ */ 1 from t where a = ~b",
+//	}, {
+//		input: "select /* empty function */ 1 from t where a = b()",
+//	}, {
+//		input: "select /* function with 1 param */ 1 from t where a = b(c)",
+//	}, {
+//		input: "select /* function with many params */ 1 from t where a = b(c, d)",
+//	}, {
+//		input: "select /* if as func */ 1 from t where a = if(b)",
+//	}, {
+//		input: "select /* function with distinct */ count(distinct a) from t",
+//	}, {
+//		input: "select /* a */ a from t",
+//	}, {
+//		input: "select /* a.b */ a.b from t",
+//	}, {
+//		input:  "select /* keyword a.b */ `By`.`bY` from t",
+//		output: "select /* keyword a.b */ `By`.`by` from t",
+//	}, {
+//		input: "select /* string */ 'a' from t",
+//	}, {
+//		input:  "select /* double quoted string */ \"a\" from t",
+//		output: "select /* double quoted string */ 'a' from t",
+//	}, {
+//		input:  "select /* quote quote in string */ 'a''a' from t",
+//		output: "select /* quote quote in string */ 'a\\'a' from t",
+//	}, {
+//		input:  "select /* double quote quote in string */ \"a\"\"a\" from t",
+//		output: "select /* double quote quote in string */ 'a\\\"a' from t",
+//	}, {
+//		input:  "select /* quote in double quoted string */ \"a'a\" from t",
+//		output: "select /* quote in double quoted string */ 'a\\'a' from t",
+//	}, {
+//		input: "select /* backslash quote in string */ 'a\\'a' from t",
+//	}, {
+//		input: "select /* literal backslash in string */ 'a\\\\na' from t",
+//	}, {
+//		input: "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
+//	}, {
+//		input:  "select /* non-escape */ '\\x' from t",
+//		output: "select /* non-escape */ 'x' from t",
+//	}, {
+//		input: "select /* unescaped backslash */ '\\n' from t",
+//	}, {
+//		input: "select /* value argument */ :a from t",
+//	}, {
+//		input: "select /* value argument with digit */ :a1 from t",
+//	}, {
+//		input: "select /* value argument with dot */ :a.b from t",
+//	}, {
+//		input:  "select /* positional argument */ ? from t",
+//		output: "select /* positional argument */ :v1 from t",
+//	}, {
+//		input:  "select /* multiple positional arguments */ ?, ? from t",
+//		output: "select /* multiple positional arguments */ :v1, :v2 from t",
+//	}, {
+//		input: "select /* list arg */ * from t where a in ::list",
+//	}, {
+//		input: "select /* list arg not in */ * from t where a not in ::list",
+//	}, {
+//		input: "select /* null */ null from t",
+//	}, {
+//		input: "select /* octal */ 010 from t",
+//	}, {
+//		input: "select /* hex */ 0xf0 from t",
+//	}, {
+//		input: "select /* hex caps */ 0xF0 from t",
+//	}, {
+//		input: "select /* float */ 0.1 from t",
+//	}, {
+//		input: "select /* group by */ 1 from t group by a",
+//	}, {
+//		input: "select /* having */ 1 from t having a = b",
+//	}, {
+//		input:  "select /* simple order by */ 1 from t order by a",
+//		output: "select /* simple order by */ 1 from t order by a asc",
+//	}, {
+//		input: "select /* order by asc */ 1 from t order by a asc",
+//	}, {
+//		input: "select /* order by desc */ 1 from t order by a desc",
+//	}, {
+//		input: "select /* limit a */ 1 from t limit a",
+//	}, {
+//		input: "select /* limit a,b */ 1 from t limit a, b",
+//	}, {
+//		input:  "select /* binary unary */ a- -b from t",
+//		output: "select /* binary unary */ a - -b from t",
+//	}, {
+//		input: "select /* - - */ - -b from t",
+//	}, {
+//		input: "select /* dual */ 1 from dual",
+//	}, {
+//		input:  "select /* Dual */ 1 from Dual",
+//		output: "select /* Dual */ 1 from dual",
+//	}, {
+//		input:  "select /* DUAL */ 1 from Dual",
+//		output: "select /* DUAL */ 1 from dual",
+//	}, {
 		input: "insert /* simple */ into a values (1)",
-	}, {
-		input: "insert /* a.b */ into a.b values (1)",
-	}, {
-		input: "insert /* multi-value */ into a values (1, 2)",
-	}, {
-		input: "insert /* multi-value list */ into a values (1, 2), (3, 4)",
-	}, {
-		input:  "insert /* set */ into a set a = 1, a.b = 2",
-		output: "insert /* set */ into a(a, a.b) values (1, 2)",
-	}, {
-		input: "insert /* value expression list */ into a values (a + 1, 2 * 3)",
-	}, {
-		input: "insert /* column list */ into a(a, b) values (1, 2)",
-	}, {
-		input: "insert /* qualified column list */ into a(a, a.b) values (1, 2)",
-	}, {
-		input: "insert /* select */ into a select b, c from d",
-	}, {
-		input: "insert /* on duplicate */ into a values (1, 2) on duplicate key update b = func(a), c = d",
-	}, {
-		input: "update /* simple */ a set b = 3",
-	}, {
-		input: "update /* a.b */ a.b set b = 3",
-	}, {
-		input: "update /* b.c */ a set b.c = 3",
-	}, {
-		input: "update /* list */ a set b = 3, c = 4",
-	}, {
-		input: "update /* expression */ a set b = 3 + 4",
-	}, {
-		input: "update /* where */ a set b = 3 where a = b",
-	}, {
-		input: "update /* order */ a set b = 3 order by c desc",
-	}, {
-		input: "update /* limit */ a set b = 3 limit c",
-	}, {
-		input: "delete /* simple */ from a",
-	}, {
-		input: "delete /* a.b */ from a.b",
-	}, {
-		input: "delete /* where */ from a where a = b",
-	}, {
-		input: "delete /* order */ from a order by b desc",
-	}, {
-		input: "delete /* limit */ from a limit b",
-	}, {
-		input: "set /* simple */ a = 3",
-	}, {
-		input: "set /* list */ a = 3, b = 4",
-	}, {
-		input:  "alter ignore table a add foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a add foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table `By` add foo",
-		output: "alter table `By`",
-	}, {
-		input:  "alter table a alter foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a change foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a modify foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a drop foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a disable foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a enable foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a order foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a default foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a discard foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a import foo",
-		output: "alter table a",
-	}, {
-		input:  "alter table a rename b",
-		output: "rename table a b",
-	}, {
-		input:  "alter table `By` rename `bY`",
-		output: "rename table `By` `bY`",
-	}, {
-		input:  "alter table a rename to b",
-		output: "rename table a b",
-	}, {
-		input: "create table a",
-	}, {
-		input: "create table `by`",
-	}, {
-		input:  "create table if not exists a",
-		output: "create table a",
-	}, {
-		input:  "create index a on b",
-		output: "alter table b",
-	}, {
-		input:  "create unique index a on b",
-		output: "alter table b",
-	}, {
-		input:  "create unique index a using foo on b",
-		output: "alter table b",
-	}, {
-		input:  "create view a",
-		output: "create table a",
-	}, {
-		input:  "alter view a",
-		output: "alter table a",
-	}, {
-		input:  "drop view a",
-		output: "drop table a",
-	}, {
-		input: "drop table a",
-	}, {
-		input:  "drop table if exists a",
-		output: "drop table a",
-	}, {
-		input:  "drop view if exists a",
-		output: "drop table a",
-	}, {
-		input:  "drop index b on a",
-		output: "alter table a",
-	}, {
-		input:  "analyze table a",
-		output: "alter table a",
-	}, {
-		input:  "show foobar",
-		output: "other",
-	}, {
-		input:  "describe foobar",
-		output: "other",
-	}, {
-		input:  "explain foobar",
-		output: "other",
+//	}, {
+//		input: "insert /* a.b */ into a.b values (1)",
+//	}, {
+//		input: "insert /* multi-value */ into a values (1, 2)",
+//	}, {
+//		input: "insert /* multi-value list */ into a values (1, 2), (3, 4)",
+//	}, {
+//		input:  "insert /* set */ into a set a = 1, a.b = 2",
+//		output: "insert /* set */ into a(a, a.b) values (1, 2)",
+//	}, {
+//		input: "insert /* value expression list */ into a values (a + 1, 2 * 3)",
+//	}, {
+//		input: "insert /* column list */ into a(a, b) values (1, 2)",
+//	}, {
+//		input: "insert /* qualified column list */ into a(a, a.b) values (1, 2)",
+//	}, {
+//		input: "insert /* select */ into a select b, c from d",
+//	}, {
+//		input: "insert /* on duplicate */ into a values (1, 2) on duplicate key update b = func(a), c = d",
+//	}, {
+//		input: "update /* simple */ a set b = 3",
+//	}, {
+//		input: "update /* a.b */ a.b set b = 3",
+//	}, {
+//		input: "update /* b.c */ a set b.c = 3",
+//	}, {
+//		input: "update /* list */ a set b = 3, c = 4",
+//	}, {
+//		input: "update /* expression */ a set b = 3 + 4",
+//	}, {
+//		input: "update /* where */ a set b = 3 where a = b",
+//	}, {
+//		input: "update /* order */ a set b = 3 order by c desc",
+//	}, {
+//		input: "update /* limit */ a set b = 3 limit c",
+//	}, {
+//		input: "delete /* simple */ from a",
+//	}, {
+//		input: "delete /* a.b */ from a.b",
+//	}, {
+//		input: "delete /* where */ from a where a = b",
+//	}, {
+//		input: "delete /* order */ from a order by b desc",
+//	}, {
+//		input: "delete /* limit */ from a limit b",
+//	}, {
+//		input: "set /* simple */ a = 3",
+//	}, {
+//		input: "set /* list */ a = 3, b = 4",
+//	}, {
+//		input:  "alter ignore table a add foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a add foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table `By` add foo",
+//		output: "alter table `By`",
+//	}, {
+//		input:  "alter table a alter foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a change foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a modify foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a drop foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a disable foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a enable foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a order foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a default foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a discard foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a import foo",
+//		output: "alter table a",
+//	}, {
+//		input:  "alter table a rename b",
+//		output: "rename table a b",
+//	}, {
+//		input:  "alter table `By` rename `bY`",
+//		output: "rename table `By` `bY`",
+//	}, {
+//		input:  "alter table a rename to b",
+//		output: "rename table a b",
+//	}, {
+//		input: "create table a",
+//	}, {
+//		input: "create table `by`",
+//	}, {
+//		input:  "create table if not exists a",
+//		output: "create table a",
+//	}, {
+//		input:  "create index a on b",
+//		output: "alter table b",
+//	}, {
+//		input:  "create unique index a on b",
+//		output: "alter table b",
+//	}, {
+//		input:  "create unique index a using foo on b",
+//		output: "alter table b",
+//	}, {
+//		input:  "create view a",
+//		output: "create table a",
+//	}, {
+//		input:  "alter view a",
+//		output: "alter table a",
+//	}, {
+//		input:  "drop view a",
+//		output: "drop table a",
+//	}, {
+//		input: "drop table a",
+//	}, {
+//		input:  "drop table if exists a",
+//		output: "drop table a",
+//	}, {
+//		input:  "drop view if exists a",
+//		output: "drop table a",
+//	}, {
+//		input:  "drop index b on a",
+//		output: "alter table a",
+//	}, {
+//		input:  "analyze table a",
+//		output: "alter table a",
+//	}, {
+//		input:  "show foobar",
+//		output: "other",
+//	}, {
+//		input:  "describe foobar",
+//		output: "other",
+//	}, {
+//		input:  "explain foobar",
+//		output: "other",
 	}}
 	for _, tcase := range validSQL {
 		if tcase.output == "" {
@@ -513,6 +516,12 @@ func TestValid(t *testing.T) {
 			t.Errorf("input: %s, err: %v", tcase.input, err)
 			continue
 		}
+        if _, ok := tree.(*Select); ok {
+            fmt.Printf("%#v\n", GetTableName(tree.(*Select).From[0].(*AliasedTableExpr).Expr))
+            fmt.Printf("%#v\n", tree.(*Select).From[0].(*AliasedTableExpr).Expr.(*TableName).Name)
+            fmt.Printf("%#v\n", string(tree.(*Select).Where.Expr.(*ComparisonExpr).Right.(NumVal)))
+            fmt.Printf("%#v\n", GetColName(tree.(*Select).Where.Expr.(*ComparisonExpr).Left))
+        }
 		out := String(tree)
 		if out != tcase.output {
 			t.Errorf("out: %s, want %s", out, tcase.output)

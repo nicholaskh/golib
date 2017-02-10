@@ -2,12 +2,13 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	log "github.com/nicholaskh/log4go"
 	"io"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
+	log "github.com/nicholaskh/log4go"
 
 	_ "expvar"         // localhost:xx/debug/vars
 	_ "net/http/pprof" // localhost:xx/debug/pprof

@@ -15,11 +15,11 @@ const (
 type Client struct {
 	sync.Mutex
 	conn_type int8
-	Proto     *Protocol
+	Proto     Protocol
 	net.Conn
 }
 
-func NewClient(conn net.Conn, ctype int8, proto *Protocol) *Client {
+func NewClient(conn net.Conn, ctype int8, proto Protocol) *Client {
 	return &Client{conn_type: ctype, Proto: proto, Conn: conn}
 }
 

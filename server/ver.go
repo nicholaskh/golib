@@ -8,7 +8,7 @@ import (
 
 var (
 	BuildID = "unknown"
-    VERSION = "0.1.0a"
+	VERSION = "0.1.0a"
 )
 
 func ShowVersionAndExit() {
