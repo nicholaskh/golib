@@ -14,7 +14,7 @@ type TcpServer struct {
 	clientProcessor     ClientProcessor
 	AcceptLock          sync.Mutex
 	initialGoRoutineNum int
-	Proto               Protocol
+	protoType           int
 }
 
 type ClientProcessor interface {
@@ -69,11 +69,9 @@ func (this *TcpServer) startProcessorThread() {
 		return
 	}
 
-	if this.Proto == nil {
-		this.Proto = NewFixedLengthProtocol()
-	}
-	this.Proto.SetConn(conn)
-	client := NewClient(conn, CONN_TYPE_TCP, this.Proto)
+	proto := factoryProto(this.protoType)
+	proto.SetConn(conn)
+	client := NewClient(conn, CONN_TYPE_TCP, proto)
 	this.clientProcessor.OnAccept(client)
 }
 
@@ -83,6 +81,6 @@ func (this *TcpServer) StopTcpServer() {
 	log.Info("TCP server[%s] stopped", this.Name)
 }
 
-func (this *TcpServer) SetProto(proto Protocol) {
-	this.Proto = proto
+func (this *TcpServer) SetProtoType(protoType int) {
+	this.protoType = protoType
 }
