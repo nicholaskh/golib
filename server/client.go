@@ -24,8 +24,15 @@ func NewClient(conn net.Conn, ctype int8, proto Protocol) *Client {
 }
 
 func (this *Client) WriteMsg(msg string) {
+
 	data := this.Proto.Marshal([]byte(msg))
+	this.Mutex.Lock()
+	if !this.IsConnected() {
+		return
+	}
 	this.Conn.Write(data)
+	this.Mutex.Unlock()
+
 	if this.conn_type == CONN_TYPE_LONG_POLLING {
 		this.Close()
 	}
@@ -37,15 +44,16 @@ func (this *Client) IsConnected() bool {
 
 // reentrant safe
 func (this *Client) Close() {
+	this.Mutex.Lock()
+	defer this.Mutex.Unlock()
+
 	if this.Conn == nil {
 		return
 	}
-	this.Mutex.Lock()
 	log.Info("Client shutdown: %s", this.Conn.RemoteAddr())
 	err := this.Conn.Close()
 	if err != nil {
 		log.Error(err)
 	}
 	this.Conn = nil
-	this.Mutex.Unlock()
 }
