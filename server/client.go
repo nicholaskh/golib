@@ -24,7 +24,6 @@ func NewClient(conn net.Conn, ctype int8, proto Protocol) *Client {
 }
 
 func (this *Client) WriteMsg(msg string) {
-
 	data := this.Proto.Marshal([]byte(msg))
 	this.Mutex.Lock()
 	if !this.IsConnected() {
@@ -47,7 +46,7 @@ func (this *Client) Close() {
 	this.Mutex.Lock()
 	defer this.Mutex.Unlock()
 
-	if this.Conn == nil {
+    if !this.IsConnected() {
 		return
 	}
 	log.Info("Client shutdown: %s", this.Conn.RemoteAddr())
