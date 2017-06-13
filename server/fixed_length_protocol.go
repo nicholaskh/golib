@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"math"
 	"net"
 
 	log "github.com/nicholaskh/log4go"
@@ -13,6 +12,7 @@ import (
 
 const (
 	HEAD_LENGTH = 4
+	MAX_BODY_LENGTH = 1024 * 1024 * 1
 )
 
 type FixedLengthProtocol struct {
@@ -56,7 +56,7 @@ func (this *FixedLengthProtocol) Read() ([]byte, error) {
 
 	//app + data
 	payloadLength := int(dataLength)
-	if payloadLength > math.MaxInt64 || payloadLength < 0 {
+	if payloadLength > MAX_BODY_LENGTH || payloadLength < 0 {
 		return []byte{}, errors.New("[Protocol] Payload out of length")
 	}
 	payload := make([]byte, payloadLength)
