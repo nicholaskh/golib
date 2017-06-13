@@ -69,17 +69,18 @@ func (this *FixedLengthProtocol) Read() ([]byte, error) {
 	return payload, nil
 }
 
-func (this *FixedLengthProtocol) ReadN(conn net.Conn, buf []byte, n int) error {
+func (this *FixedLengthProtocol) ReadN(conn net.Conn, buf []byte, n int) (err error) {
 	buffer := bytes.NewBuffer([]byte{})
 	for n > 0 {
+        var readN int
 		b_buf := make([]byte, n)
-		readN, err := conn.Read(b_buf)
+		readN, err = conn.Read(b_buf)
 		if err != nil {
 			return err
 		}
 		n -= readN
 		buffer.Write(b_buf)
 	}
-	copy(buf, buffer.Bytes())
-	return nil
+    _, err = buffer.Read(buf)
+	return err
 }
