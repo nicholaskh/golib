@@ -37,6 +37,20 @@ func (this *Client) WriteMsg(msg string) {
 	}
 }
 
+func (this *Client) WriteBinMsg(msg []byte) {
+	data := this.Proto.Marshal(msg)
+	this.Mutex.Lock()
+	if !this.IsConnected() {
+		return
+	}
+	this.Conn.Write(data)
+	this.Mutex.Unlock()
+
+	if this.conn_type == CONN_TYPE_LONG_POLLING {
+		this.Close()
+	}
+}
+
 func (this *Client) IsConnected() bool {
 	return this.Conn != nil
 }
