@@ -23,18 +23,19 @@ func NewClient(conn net.Conn, ctype int8, proto Protocol) *Client {
 	return &Client{conn_type: ctype, Proto: proto, Conn: conn}
 }
 
-func (this *Client) WriteMsg(msg string) {
+func (this *Client) WriteMsg(msg string) error {
 	data := this.Proto.Marshal([]byte(msg))
 	this.Mutex.Lock()
 	if !this.IsConnected() {
-		return
+		return nil
 	}
-	this.Conn.Write(data)
+	_, err := this.Conn.Write(data)
 	this.Mutex.Unlock()
 
 	if this.conn_type == CONN_TYPE_LONG_POLLING {
 		this.Close()
 	}
+	return err
 }
 
 func (this *Client) WriteBinMsg(msg []byte) {
