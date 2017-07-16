@@ -79,7 +79,7 @@ func (this *FixedLengthProtocol) ReadN(conn net.Conn, buf []byte, n int) (err er
 			return err
 		}
 		n -= readN
-		buffer.Write(b_buf)
+		buffer.Write(b_buf[: readN])
 	}
     _, err = buffer.Read(buf)
 	return err
