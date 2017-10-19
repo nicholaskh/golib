@@ -36,6 +36,27 @@ func NewLruCache(maxEntries int) *LruCache {
 	}
 }
 
+// get or create one if not exists
+func (c *LruCache) GetOrAdd(key Key, value interface{}) interface{} {
+	c.Lock()
+
+	if ele, hit := c.cache[key]; hit {
+		c.ll.MoveToFront(ele)
+		c.Unlock()
+		return ele.Value.(*entry).value
+	}
+
+	ele := c.ll.PushFront(&entry{key, value})
+	c.cache[key] = ele
+	if c.MaxEntries != 0 && c.ll.Len() > c.MaxEntries {
+		// evict olded element
+		c.removeOldest()
+	}
+
+	c.Unlock()
+	return value
+}
+
 // Set adds a value to the cache.
 func (c *LruCache) Set(key Key, value interface{}) {
 	c.Lock()
@@ -144,6 +165,7 @@ func (c *LruCache) removeElement(e *list.Element) {
 		c.OnEvicted(kv.key, kv.value)
 	}
 }
+
 
 // Len returns the number of items in the cache.
 func (c *LruCache) Len() int {
