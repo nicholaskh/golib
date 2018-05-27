@@ -76,6 +76,31 @@ func (this *Client) WriteFormatMsg(op, body string) error {
 
 }
 
+func (this *Client) WriteFormatBinMsg(op string, body []byte) error{
+	dataBuff := bytes.NewBuffer([]byte{})
+
+	opBytes := []byte(op)
+
+	// write op to dataBuff
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, int32(len(opBytes)))
+	dataBuff.Write(buf.Bytes())
+
+	buf.Reset()
+	binary.Write(buf, binary.BigEndian, opBytes)
+	dataBuff.Write(buf.Bytes())
+
+
+	buf.Reset()
+	binary.Write(buf, binary.BigEndian, int32(len(body)))
+	dataBuff.Write(buf.Bytes())
+
+	dataBuff.Write(body)
+
+	// write into io
+	return this.WriteBinMsg(dataBuff.Bytes())
+}
+
 func (this *Client) WriteBinMsg(msg []byte) error {
 	data := this.Proto.Marshal(msg)
 	this.Mutex.Lock()
