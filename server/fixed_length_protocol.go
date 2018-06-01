@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	HEAD_LENGTH = 4
+	HEAD_LENGTH     = 4
 	MAX_BODY_LENGTH = 1024 * 1024 * 1
 )
 
@@ -72,15 +72,15 @@ func (this *FixedLengthProtocol) Read() ([]byte, error) {
 func (this *FixedLengthProtocol) ReadN(conn net.Conn, buf []byte, n int) (err error) {
 	buffer := bytes.NewBuffer([]byte{})
 	for n > 0 {
-        var readN int
+		var readN int
 		b_buf := make([]byte, n)
 		readN, err = conn.Read(b_buf)
 		if err != nil {
 			return err
 		}
 		n -= readN
-		buffer.Write(b_buf[: readN])
+		buffer.Write(b_buf[:readN])
 	}
-    _, err = buffer.Read(buf)
+	_, err = buffer.Read(buf)
 	return err
 }

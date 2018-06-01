@@ -1,11 +1,11 @@
 package server
 
 import (
-	"net"
-	"sync"
-	"errors"
 	"bytes"
 	"encoding/binary"
+	"errors"
+	"net"
+	"sync"
 
 	log "github.com/nicholaskh/log4go"
 )
@@ -47,7 +47,7 @@ func (this *Client) WriteFormatMsg(op, body string) error {
 
 	opBytes := []byte(op)
 	var bodyBytes []byte
-	if body != ""{
+	if body != "" {
 		bodyBytes = []byte(body)
 	}
 
@@ -76,7 +76,7 @@ func (this *Client) WriteFormatMsg(op, body string) error {
 
 }
 
-func (this *Client) WriteFormatBinMsg(op string, body []byte) error{
+func (this *Client) WriteFormatBinMsg(op string, body []byte) error {
 	dataBuff := bytes.NewBuffer([]byte{})
 
 	opBytes := []byte(op)
@@ -89,7 +89,6 @@ func (this *Client) WriteFormatBinMsg(op string, body []byte) error{
 	buf.Reset()
 	binary.Write(buf, binary.BigEndian, opBytes)
 	dataBuff.Write(buf.Bytes())
-
 
 	buf.Reset()
 	binary.Write(buf, binary.BigEndian, int32(len(body)))
@@ -126,7 +125,7 @@ func (this *Client) Close() {
 	this.Mutex.Lock()
 	defer this.Mutex.Unlock()
 
-    if !this.IsConnected() {
+	if !this.IsConnected() {
 		return
 	}
 	log.Info("Client shutdown: %s", this.Conn.RemoteAddr())
