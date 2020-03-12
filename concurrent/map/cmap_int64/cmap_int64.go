@@ -2,7 +2,7 @@ package cmap_int64
 
 import (
 	"encoding/json"
-    "fmt"
+	"fmt"
 	"hash/fnv"
 	"sync"
 )
@@ -17,6 +17,10 @@ type ConcurrentMap []*ConcurrentMapShared
 type ConcurrentMapShared struct {
 	items        map[int64]interface{}
 	sync.RWMutex // Read Write mutex, guards access to internal map.
+}
+
+func (m *ConcurrentMapShared) GetItems() map[int64]interface{} {
+	return m.items
 }
 
 // Creates a new concurrent map.
